@@ -4,39 +4,13 @@
   become: true
   tasks:
 
-  - name: update repository index in Debian-like systems
-    apt:
+  - name: install apache and php
+    package:
+      name: 
+        - "{{ apache_package }}"
+        - "{{ php_package }}"
+      state: latest
       update_cache: yes
-    when: ansible_distribution in ["Debian", "Ubuntu"]
-
-  - name: install apache2 package in Debian-like systems
-    apt:
-      name: apache2
-      state: latest
-    when: ansible_distribution in ["Debian", "Ubuntu"]
-
-  - name: add php support for apache in Debian-like systems
-    apt:
-      name: libapache2-mod-php
-      state: latest
-    when: ansible_distribution in ["Debian", "Ubuntu"]
-
-  - name: update repository index in RedHat-like systems
-    dnf:
-      update_cache: yes
-    when: ansible_distribution in ["AlmaLinux", "CentOS"]
-
-  - name: install httpd package in RedHat-like systems
-    dnf:
-      name: httpd 
-      state: latest
-    when: ansible_distribution in ["AlmaLinux", "CentOS"]
-
-  - name: add php support for apache in RedHat-like systems
-    dnf:
-      name: php
-      state: latest
-    when: ansible_distribution in ["AlmaLinux", "CentOS"]
 
   - name: Enable and Start httpd service in RedHat-like systems
     service:

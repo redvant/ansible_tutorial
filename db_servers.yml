@@ -1,0 +1,73 @@
+---
+
+- hosts: all
+  become: true
+  pre_tasks:
+
+  - name: install updates (RedHat-like systems)
+    dnf:
+      update_only: yes
+      update_cache: yes
+    when: ansible_distribution in ["AlmaLinux", "CentOS"]
+
+  - name: install updates (Debian-like systems)
+    apt:
+      upgrade: dist
+      update_cache: yes
+    when: ansible_distribution in ["Debian", "Ubuntu"]
+
+- hosts: db_servers
+  become: true
+  pre_tasks:
+
+  - name: install postgreSQL package (Debian-like systems)
+    apt:
+      name: postgresql
+      state: latest
+    when: ansible_distribution in ["Debian", "Ubuntu"]
+
+  - name: enable postgresql:12 module (RedHat-like systems)
+    shell: |
+      dnf -qy module enable postgresql:12
+    args:
+      warn: no
+    when: ansible_distribution in ["AlmaLinux", "CentOS"]
+
+  - name: install postgreSQL package (RedHat-like systems)
+    dnf:
+      name: 
+        - postgresql
+        - postgresql-server
+      state: present
+    when: ansible_distribution in ["AlmaLinux", "CentOS"]
+
+  - name: Install Python packages (RedHat-like systems)
+    dnf:
+      name: python3-psycopg2
+      state: present
+    when: ansible_distribution in ["AlmaLinux", "CentOS"]
+
+  tasks:
+  
+  - name: See if PostgreSQL is initialized (RedHat-like systems)
+    stat:
+      path: "/var/lib/pgsql/data/pg_hba.conf"
+    register: postgres_data
+    when: ansible_distribution in ["AlmaLinux", "CentOS"]
+
+  - name: Initialize PostgreSQL (RedHat-like systems)
+    shell: "postgresql-setup initdb"
+    when: ansible_distribution in ["AlmaLinux", "CentOS"] and not postgres_data.stat.exists
+
+  - name: Start and Enable PostgreSQL Services (RedHat-like systems)
+    service:
+      name:
+        postgresql
+      state: started
+      enabled: yes
+    when: ansible_distribution in ["AlmaLinux", "CentOS"]
+
+  handlers:
+
+  - name: restart postgres
+    service: name=postgresql state=restarted

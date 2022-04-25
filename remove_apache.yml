@@ -1,19 +1,36 @@
 ---
 
-- hosts: all
+- hosts: all,!web_servers
   become: true
   tasks:
 
   - name: update repository index
-    apt:
+    package:
       update_cache: yes
 
-  - name: remove apache2 package
+  - name: remove packages (Debian-like systems)
     apt:
-      name: apache2
+      name: 
+        - apache2
+        - libapache2-mod-php
       state: absent
+    when: ansible_distribution in ["Debian", "Ubuntu"]
 
-  - name: remove php support for apache
-    apt:
-      name: libapache2-mod-php
+  - name: remove packages (RedHat-like systems)
+    dnf:
+      name:
+        - httpd
+        - php
       state: absent
+    when: ansible_distribution in ["AlmaLinux", "CentOS"]
+
+  - name: close firewall ports (RedHat-like systems)
+    firewalld:
+      service: "{{ item }}"
+      state: disabled
+      permanent: yes
+      immediate: yes
+    with_items:
+      - http
+      - https
+    when: ansible_distribution in ["AlmaLinux", "CentOS"]

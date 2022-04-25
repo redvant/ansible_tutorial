@@ -1,0 +1,26 @@
+---
+
+- hosts: all
+  become: true
+  pre_tasks:
+
+  - name: install updates (RedHat-like systems)
+    dnf:
+      update_only: yes
+      update_cache: yes
+    when: ansible_distribution in ["AlmaLinux", "CentOS"]
+
+  - name: install updates (Debian-like systems)
+    apt:
+      upgrade: dist
+      update_cache: yes
+    when: ansible_distribution in ["Debian", "Ubuntu"]
+
+- hosts: file_servers
+  become: true
+  tasks:
+
+  - name: install samba package
+    package:
+      name: samba
+      state: latest

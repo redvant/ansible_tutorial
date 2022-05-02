@@ -5,12 +5,14 @@
   pre_tasks:
 
   - name: install updates (RedHat-like systems)
+    tags: always
     dnf:
       update_only: yes
       update_cache: yes
     when: ansible_distribution in ["AlmaLinux", "CentOS"]
 
   - name: install updates (Debian-like systems)
+    tags: always
     apt:
       upgrade: dist
       update_cache: yes
@@ -21,6 +23,7 @@
   pre_tasks:
 
   - name: install apache and php for Debian-like systems
+    tags: apache,apache2,debian
     apt:
       name: 
         - apache2
@@ -29,6 +32,7 @@
     when: ansible_distribution in ["Debian", "Ubuntu"]
 
   - name: install apache and php for RedHat-like systems
+    tags: apache,dnf,httpd,redhat
     dnf:
       name: 
         - httpd
@@ -39,6 +43,7 @@
   tasks:
 
   - name: Enable and Start httpd service in RedHat-like systems
+    tags: apache,service,httpd,redhat
     service:
       name: httpd
       enabled: yes
@@ -46,6 +51,7 @@
     when: ansible_distribution in ["AlmaLinux", "CentOS"]
 
   - name: Open httpd necessary firewall ports in RedHat-like systems
+    tags: apache,firewall,httpd,redhat
     firewalld:
       service: "{{item}}"
       state: enabled
@@ -61,12 +67,14 @@
   pre_tasks:
 
   - name: install postgreSQL package (Debian-like systems)
+    tags: db,postgres,debian
     apt:
       name: postgresql
       state: latest
     when: ansible_distribution in ["Debian", "Ubuntu"]
 
   - name: enable postgresql:12 module (RedHat-like systems)
+    tags: dnf,postgres,redhat
     shell: |
       dnf -qy module enable postgresql:12
     args:
@@ -74,6 +82,7 @@
     when: ansible_distribution in ["AlmaLinux", "CentOS"]
 
   - name: install postgreSQL package (RedHat-like systems)
+    tags: db,postgres,redhat
     dnf:
       name: 
         - postgresql
@@ -82,6 +91,7 @@
     when: ansible_distribution in ["AlmaLinux", "CentOS"]
 
   - name: Install Python packages (RedHat-like systems)
+    tags: python,postgres,redhat
     dnf:
       name: python3-psycopg2
       state: present
@@ -90,16 +100,19 @@
   tasks:
   
   - name: See if PostgreSQL is initialized (RedHat-like systems)
+    tags: register,postgres,redhat
     stat:
       path: "/var/lib/pgsql/data/pg_hba.conf"
     register: postgres_data
     when: ansible_distribution in ["AlmaLinux", "CentOS"]
 
   - name: Initialize PostgreSQL (RedHat-like systems)
+    tags: init,postgres,redhat
     shell: "postgresql-setup initdb"
     when: ansible_distribution in ["AlmaLinux", "CentOS"] and not postgres_data.stat.exists
 
   - name: Start and Enable PostgreSQL Services (RedHat-like systems)
+    tags: service,postgres,redhat
     service:
       name:
         postgresql
@@ -117,6 +130,7 @@
   tasks:
 
   - name: install samba package
+    tags: samba
     package:
       name: samba
       state: latest
